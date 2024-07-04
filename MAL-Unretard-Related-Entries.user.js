@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         MAL - Unretard Related Entries
 // @version      1.0.0
-// @description  Reverts retarded changes from 2023 to related entries back to the sane list.
+// @description  Reverts retarded changes from 2024-05-24 to related entries back to the sane list.
 // @author       tariel36
 // @grant        GM_setValue
 // @grant        GM_getValue
