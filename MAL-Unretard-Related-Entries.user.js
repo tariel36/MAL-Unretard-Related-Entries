@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         MAL - Unretard Related Entries
-// @version      1.0.0
 // @description  Reverts retarded changes from 2024-05-24 to related entries back to the sane list.
+// @version      1.0.1
 // @author       tariel36
 // @grant        GM_setValue
 // @grant        GM_getValue
@@ -19,9 +19,13 @@ function unretard() {
     "Prequel",
     "Sequel",
     "Summary",
+    "Parent Story",
     "Side Story",
     "Alternative Version",
+    "Alternative Setting",
+    "Spin-Off",
     "Other",
+    "Character"
   ];
 
   // Unfold
@@ -50,10 +54,26 @@ function unretard() {
       return prev;
     }, {});
 
+  // Get table's parent
+  const relatedEntriesContainer = document.querySelector(".related-entries");
+
   // Get table
-  const table = [...document.getElementsByClassName("entries-table")]
-    .find((x) => true)
-    ?.querySelector("tbody");
+  const table =
+    [...relatedEntriesContainer.getElementsByClassName("entries-table")]
+      .find((x) => true)
+      ?.querySelector("tbody") ??
+    (() => {
+      const table = document.createElement("table");
+      table.className = "entries-table";
+
+      const tbody = document.createElement("tbody");
+
+      // Append the tbody to the table
+      table.appendChild(tbody);
+      relatedEntriesContainer.appendChild(table);
+
+      return tbody;
+    })();
 
   // Get all sections headers
   const existingSections = [
