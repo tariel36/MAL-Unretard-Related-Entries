@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         MAL - Unretard Related Entries
 // @description  Reverts retarded changes from 2024-05-24 to related entries back to the sane list.
-// @version      1.0.2
+// @version      1.0.3
 // @author       tariel36
 // @grant        GM_registerMenuCommand
 // @grant        GM_getValue
@@ -156,7 +156,7 @@ function sortEntries(orderingArray) {
       (a, b) => orderingArray.indexOf(a.key) - orderingArray.indexOf(b.key)
     );
 
-    return result;
+  return result;
 }
 
 function removeOldEntries(table) {
@@ -184,41 +184,37 @@ function registerOptions() {
     }
   });
 
-  GM_registerMenuCommand(
-    "Set auto-unfold",
-    () => {
-      const text = prompt("Provide value (true = auto-unfold, any other value is false):");
+  GM_registerMenuCommand("Set auto-unfold", () => {
+    const text = prompt(
+      "Provide value (true = auto-unfold, any other value is false):"
+    );
 
-      if (text) {
-        setSetting("autoUnfold", text);
-      }
+    if (text) {
+      setSetting("autoUnfold", text);
     }
-  );
+  });
 }
 
 function getOptions() {
-  const defaultOrdering = "Adaptation, Prequel, Sequel, Summary, Parent Story, Side Story, Alternative Version, Alternative Setting, Spin-Off, Other, Character";
+  const defaultOrdering =
+    "Adaptation, Prequel, Sequel, Summary, Parent Story, Side Story, Alternative Version, Alternative Setting, Spin-Off, Other, Character";
   const orderingArray = (
-    GM_getValue(
-      "orderingArray",
-      defaultOrdering
-    ) ?? defaultOrdering
+    GM_getValue("orderingArray", defaultOrdering) ?? defaultOrdering
   )
     .split(",")
     .map((x) => (x ?? "").trim())
     .filter((x) => x.length > 0);
 
-  const autoUnfold = (GM_getValue("autoUnfold", "true") ?? "true").toLowerCase() === 'true';
+  const autoUnfold =
+    (GM_getValue("autoUnfold", "true") ?? "true").toLowerCase() === "true";
 
-  return {orderingArray, autoUnfold };
+  return { orderingArray, autoUnfold };
 }
 
 function unretard() {
   // Variables etc.
   registerOptions();
   const options = getOptions();
-
-  
 
   // Unfold
   if (options.autoUnfold) {
