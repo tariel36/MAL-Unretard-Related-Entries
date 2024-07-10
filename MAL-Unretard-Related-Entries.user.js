@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         MAL - Unretard Related Entries
 // @description  Reverts retarded changes from 2024-05-24 to related entries back to the sane list.
-// @version      1.0.1
+// @version      1.0.2
 // @author       tariel36
 // @grant        GM_setValue
 // @grant        GM_getValue
@@ -12,29 +12,16 @@
 // @license      MIT
 // ==/UserScript==
 
-function unretard() {
-  // Variables etc,
-  const orderingArray = [
-    "Adaptation",
-    "Prequel",
-    "Sequel",
-    "Summary",
-    "Parent Story",
-    "Side Story",
-    "Alternative Version",
-    "Alternative Setting",
-    "Spin-Off",
-    "Other",
-    "Character"
-  ];
+const first = () => true;
 
-  // Unfold
-  Array.from(document.getElementsByClassName("hide-entry")).forEach((el) =>
-    el.removeAttribute("style")
-  );
+function unfold() {
+  Array.from(document.getElementsByClassName("hide-entry")).forEach((el) => {
+    el.removeAttribute("style");
+  });
+}
 
-  // Get aggregated entries from retarded area
-  const retardedEntries = Array.from(document.getElementsByClassName("entry"))
+function getGroupedEntries() {
+  return Array.from(document.getElementsByClassName("entry"))
     .map((entry) => ({
       entry,
       key: entry
@@ -42,7 +29,7 @@ function unretard() {
         ?.querySelector(".relation")
         ?.innerText?.trim()
         ?.split("(")
-        .find(() => true)
+        .find(first)
         ?.trim(),
     }))
     .filter((x) => !!x.key)
@@ -53,14 +40,18 @@ function unretard() {
       prev[curr.key].push(curr.entry);
       return prev;
     }, {});
+}
 
-  // Get table's parent
-  const relatedEntriesContainer = document.querySelector(".related-entries");
+function getTableParent() {
+  const foo = document.querySelector(".related-entries");
 
-  // Get table
-  const table =
+  return foo;
+}
+
+function getOrCreateEntriesTable(relatedEntriesContainer) {
+  return (
     [...relatedEntriesContainer.getElementsByClassName("entries-table")]
-      .find((x) => true)
+      .find(first)
       ?.querySelector("tbody") ??
     (() => {
       const table = document.createElement("table");
@@ -73,17 +64,20 @@ function unretard() {
       relatedEntriesContainer.appendChild(table);
 
       return tbody;
-    })();
+    })()
+  );
+}
 
-  // Get all sections headers
-  const existingSections = [
+function extractSectionsHeaders() {
+  return [
     ...([...document.getElementsByClassName("entries-table")]
-      .find((x) => true)
+      .find(first)
       ?.querySelector("tbody")
       ?.querySelectorAll("td") ?? []),
   ].filter((x) => !!x && x.classList.contains("ar"));
+}
 
-  // Add entries
+function addEntriesToTable(table, retardedEntries, existingSections) {
   Object.keys(retardedEntries).forEach((y) => {
     const entriesCollection = retardedEntries[y];
     const key = y;
@@ -133,15 +127,17 @@ function unretard() {
       list.appendChild(li);
     });
   });
+}
 
-  // Remove useless nodes
+function removeRetardedNodes() {
   document.querySelector(".entries-tile")?.remove();
   document.querySelector(".related-entries > div:first-of-type")?.remove();
+}
 
-  // Sort related entries in sane order
-  const sortedArray = [
+function sortEntries(orderingArray) {
+  return [
     ...([...document.getElementsByClassName("entries-table")]
-      .find((x) => true)
+      .find(first)
       ?.querySelector("tbody")
       ?.querySelectorAll("td") ?? []),
   ]
@@ -154,14 +150,70 @@ function unretard() {
     .sort(
       (a, b) => orderingArray.indexOf(a.key) - orderingArray.indexOf(b.key)
     );
+}
 
+function removeOldEntries(table) {
   while (table.firstChild) {
     table.removeChild(table.firstChild);
   }
+}
 
+function addNewEntries(table, sortedArray) {
   sortedArray.forEach((x) => {
     table.appendChild(x.parent);
   });
+}
+
+function unretard() {
+  // Variables etc.
+  const orderingArray = [
+    "Adaptation",
+    "Prequel",
+    "Sequel",
+    "Summary",
+    "Parent Story",
+    "Side Story",
+    "Alternative Version",
+    "Alternative Setting",
+    "Spin-Off",
+    "Other",
+    "Character",
+  ];
+
+  // Unfold
+  unfold();
+
+  // Get aggregated entries from retarded area
+  const retardedEntries = getGroupedEntries();
+
+  // Get table's parent
+  const relatedEntriesContainer = getTableParent();
+
+  // On FireFox, for some reason the script is run multiple times
+  // and every time after the first one, container is not found,
+  // so we just escape early.
+  if (!relatedEntriesContainer) {
+    return;
+  }
+
+  // Get table
+  const table = getOrCreateEntriesTable(relatedEntriesContainer);
+
+  // Get all sections headers
+  const existingSections = extractSectionsHeaders();
+
+  // Add entries
+  addEntriesToTable(table, retardedEntries, existingSections);
+
+  // Remove useless nodes
+  removeRetardedNodes();
+
+  // Sort related entries in sane order
+  const sortedArray = sortEntries(orderingArray);
+
+  removeOldEntries(table);
+
+  addNewEntries(table, sortedArray);
 }
 
 unretard();
