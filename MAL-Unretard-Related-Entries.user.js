@@ -17,6 +17,7 @@ const first = () => true;
 function unfold() {
   Array.from(document.getElementsByClassName("hide-entry")).forEach((el) => {
     el.removeAttribute("style");
+    el.classList.remove("hide-entry");
   });
 }
 
