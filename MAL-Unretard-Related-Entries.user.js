@@ -3,8 +3,9 @@
 // @description  Reverts retarded changes from 2024-05-24 to related entries back to the sane list.
 // @version      1.0.2
 // @author       tariel36
-// @grant        GM_setValue
+// @grant        GM_registerMenuCommand
 // @grant        GM_getValue
+// @grant        GM_setValue
 // @namespace    https://github.com/tariel36/MAL-Unretard-Related-Entries
 // @match        https://myanimelist.net/*
 // @updateURL    https://raw.githubusercontent.com/tariel36/MAL-Unretard-Related-Entries/master/MAL-Unretard-Related-Entries.user.js
@@ -130,13 +131,16 @@ function addEntriesToTable(table, retardedEntries, existingSections) {
   });
 }
 
-function removeRetardedNodes() {
+function removeRetardedNodes(autoUnfold) {
   document.querySelector(".entries-tile")?.remove();
-  document.querySelector(".related-entries > div:first-of-type")?.remove();
+
+  if (autoUnfold) {
+    document.querySelector(".related-entries > div:first-of-type")?.remove();
+  }
 }
 
 function sortEntries(orderingArray) {
-  return [
+  const result = [
     ...([...document.getElementsByClassName("entries-table")]
       .find(first)
       ?.querySelector("tbody")
@@ -151,6 +155,8 @@ function sortEntries(orderingArray) {
     .sort(
       (a, b) => orderingArray.indexOf(a.key) - orderingArray.indexOf(b.key)
     );
+
+    return result;
 }
 
 function removeOldEntries(table) {
@@ -165,24 +171,59 @@ function addNewEntries(table, sortedArray) {
   });
 }
 
+function setSetting(key, value) {
+  GM_setValue(key, value);
+}
+
+function registerOptions() {
+  GM_registerMenuCommand("Set ordering list", () => {
+    const color = prompt("Enter ordering list, separated by commas:");
+
+    if (color) {
+      setSetting("orderingArray", color);
+    }
+  });
+
+  GM_registerMenuCommand(
+    "Set auto-unfold",
+    () => {
+      const text = prompt("Provide value (true = auto-unfold, any other value is false):");
+
+      if (text) {
+        setSetting("autoUnfold", text);
+      }
+    }
+  );
+}
+
+function getOptions() {
+  const defaultOrdering = "Adaptation, Prequel, Sequel, Summary, Parent Story, Side Story, Alternative Version, Alternative Setting, Spin-Off, Other, Character";
+  const orderingArray = (
+    GM_getValue(
+      "orderingArray",
+      defaultOrdering
+    ) ?? defaultOrdering
+  )
+    .split(",")
+    .map((x) => (x ?? "").trim())
+    .filter((x) => x.length > 0);
+
+  const autoUnfold = (GM_getValue("autoUnfold", "true") ?? "true").toLowerCase() === 'true';
+
+  return {orderingArray, autoUnfold };
+}
+
 function unretard() {
   // Variables etc.
-  const orderingArray = [
-    "Adaptation",
-    "Prequel",
-    "Sequel",
-    "Summary",
-    "Parent Story",
-    "Side Story",
-    "Alternative Version",
-    "Alternative Setting",
-    "Spin-Off",
-    "Other",
-    "Character",
-  ];
+  registerOptions();
+  const options = getOptions();
+
+  
 
   // Unfold
-  unfold();
+  if (options.autoUnfold) {
+    unfold();
+  }
 
   // Get aggregated entries from retarded area
   const retardedEntries = getGroupedEntries();
@@ -207,10 +248,10 @@ function unretard() {
   addEntriesToTable(table, retardedEntries, existingSections);
 
   // Remove useless nodes
-  removeRetardedNodes();
+  removeRetardedNodes(options.autoUnfold);
 
   // Sort related entries in sane order
-  const sortedArray = sortEntries(orderingArray);
+  const sortedArray = sortEntries(options.orderingArray);
 
   removeOldEntries(table);
 
